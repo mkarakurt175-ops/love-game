@@ -2,47 +2,96 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Senin İçin ❤️</title>
+<title>Bizim Hikayemiz ❤️</title>
+
 <style>
-  body {
-    margin: 0;
-    overflow: hidden;
-    font-family: Arial;
-    background: linear-gradient(#87CEEB, #fff);
-  }
-  canvas {
-    display: block;
-    margin: 0 auto;
-    background: #cceeff;
-  }
-  #message {
-    position: absolute;
-    top: 40%;
-    width: 100%;
-    text-align: center;
-    font-size: 30px;
-    color: #ff3366;
-    display: none;
-  }
+body {
+  margin: 0;
+  overflow: hidden;
+  font-family: Arial;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  background: linear-gradient(#f7d9a0, #e6b566);
+}
+
+#startScreen, #finalScreen {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  background: rgba(0,0,0,0.7);
+  color: white;
+}
+
+button {
+  padding: 15px 30px;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+#finalText {
+  font-size: 28px;
+  text-align: center;
+  opacity: 0;
+  transition: 2s;
+}
 </style>
 </head>
+
 <body>
 
+<div id="startScreen">
+  <h1>Bizim Hikayemiz ❤️</h1>
+  <button onclick="startGame()">Oyuna Başla</button>
+</div>
+
+<div id="finalScreen" style="display:none;">
+  <div id="finalText">
+    Gerçek hayatta olduğu gibi oyunda da tüm engelleri aşarak beni buldun ve kavuştuk...  
+    Seni çok seviyorum Merve ❤️ Doğukan
+  </div>
+</div>
+
 <canvas id="game"></canvas>
-<div id="message">Sana kavuşmak için tüm engelleri aştım ❤️</div>
+
+<audio id="music" loop>
+  <!-- İstersen buraya mp3 linki koyacağız -->
+</audio>
 
 <script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-canvas.width = 800;
+canvas.width = 900;
 canvas.height = 400;
+
+let gameStarted = false;
+let gameOver = false;
+
+// FOTOĞRAFLAR (BURAYA KENDİLERİNİ YÜKLEYECEKSİN)
+let playerImg = new Image();
+playerImg.src = "erkek.png";
+
+let princessImg = new Image();
+princessImg.src = "kiz.png";
+
+let towerImg = new Image();
+towerImg.src = "kule.png";
+
+let flowerImg = new Image();
+flowerImg.src = "cicek.png";
 
 let player = {
   x: 50,
   y: 300,
-  width: 40,
-  height: 40,
+  width: 50,
+  height: 50,
   dy: 0,
   jumping: false,
   ducking: false
@@ -50,22 +99,38 @@ let player = {
 
 let gravity = 0.6;
 let obstacles = [];
-let gameOver = false;
+let flowers = [];
 let distance = 0;
 
-// ENGEL OLUŞTUR
+function startGame() {
+  document.getElementById("startScreen").style.display = "none";
+  gameStarted = true;
+  gameLoop();
+}
+
+// ENGELLER
 function createObstacle() {
-  let height = Math.random() > 0.5 ? 40 : 70;
-  obstacles.push({
+  let type = Math.random();
+
+  if (type < 0.5) {
+    obstacles.push({ x: canvas.width, y: 310, w: 20, h: 40 });
+  } else {
+    obstacles.push({ x: canvas.width, y: 270, w: 20, h: 80 });
+  }
+}
+
+// ÇİÇEK
+function createFlower() {
+  flowers.push({
     x: canvas.width,
-    y: 340 - height,
-    width: 20,
-    height: height
+    y: 300,
+    w: 25,
+    h: 25
   });
 }
 
-// OYUNCU GÜNCELLE
-function updatePlayer() {
+// GÜNCELLE
+function update() {
   player.y += player.dy;
   player.dy += gravity;
 
@@ -74,92 +139,98 @@ function updatePlayer() {
     player.jumping = false;
   }
 
-  if (player.ducking) {
-    player.height = 25;
-  } else {
-    player.height = 40;
-  }
-}
+  obstacles.forEach(o => o.x -= 6);
+  flowers.forEach(f => f.x -= 6);
 
-// ENGELLER
-function updateObstacles() {
-  obstacles.forEach(o => o.x -= 5);
+  if (Math.random() < 0.03) createObstacle();
+  if (Math.random() < 0.02) createFlower();
 
-  if (Math.random() < 0.02) createObstacle();
-
+  // ÇARPIŞMA
   obstacles.forEach(o => {
     if (
-      player.x < o.x + o.width &&
+      player.x < o.x + o.w &&
       player.x + player.width > o.x &&
-      player.y < o.y + o.height &&
+      player.y < o.y + o.h &&
       player.y + player.height > o.y
     ) {
-      gameOver = true;
+      resetGame();
     }
   });
 
-  obstacles = obstacles.filter(o => o.x > -50);
+  // ÇİÇEK TOPLAMA
+  flowers = flowers.filter(f => {
+    if (
+      player.x < f.x + f.w &&
+      player.x + player.width > f.x &&
+      player.y < f.y + f.h &&
+      player.y + player.height > f.y
+    ) {
+      return false;
+    }
+    return true;
+  });
+
+  distance += 5;
+
+  if (distance > 4000) finishGame();
 }
 
 // ÇİZ
 function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  // Zemin
-  ctx.fillStyle = "#654321";
-  ctx.fillRect(0, 340, canvas.width, 60);
+  // zemin
+  ctx.fillStyle = "#a36b2c";
+  ctx.fillRect(0, 350, canvas.width, 50);
 
-  // Oyuncu
-  ctx.fillStyle = "red";
-  ctx.fillRect(player.x, player.y, player.width, player.height);
+  // oyuncu
+  ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
 
-  // Engeller
+  // engeller
   ctx.fillStyle = "black";
-  obstacles.forEach(o => {
-    ctx.fillRect(o.x, o.y, o.width, o.height);
-  });
+  obstacles.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
 
-  // KULE (finish)
-  ctx.fillStyle = "purple";
-  ctx.fillRect(750, 250, 30, 90);
+  // çiçekler
+  flowers.forEach(f => ctx.drawImage(flowerImg, f.x, f.y, f.w, f.h));
+
+  // kule
+  ctx.drawImage(towerImg, 800, 200, 80, 150);
+
+  // prenses
+  ctx.drawImage(princessImg, 810, 180, 50, 50);
 }
 
-// OYUN LOOP
 function gameLoop() {
-  if (gameOver) return;
+  if (!gameStarted) return;
 
-  updatePlayer();
-  updateObstacles();
+  update();
   draw();
-
-  distance += 5;
-
-  // KULEYE ULAŞMA
-  if (distance > 3000) {
-    document.getElementById("message").style.display = "block";
-    return;
-  }
 
   requestAnimationFrame(gameLoop);
 }
 
-gameLoop();
+function resetGame() {
+  obstacles = [];
+  flowers = [];
+  distance = 0;
+  player.y = 300;
+}
+
+// FİNAL
+function finishGame() {
+  gameStarted = false;
+  document.getElementById("finalScreen").style.display = "flex";
+
+  setTimeout(() => {
+    document.getElementById("finalText").style.opacity = 1;
+  }, 500);
+}
 
 // KONTROLLER
 document.addEventListener("keydown", e => {
-  if ((e.code === "Space" || e.key === "ArrowUp") && !player.jumping) {
+  if ((e.code === "Space" || e.code === "ArrowUp") && !player.jumping) {
     player.dy = -12;
     player.jumping = true;
-  }
-
-  if (e.key === "ArrowDown") {
-    player.ducking = true;
-  }
-});
-
-document.addEventListener("keyup", e => {
-  if (e.key === "ArrowDown") {
-    player.ducking = false;
   }
 });
 </script>
