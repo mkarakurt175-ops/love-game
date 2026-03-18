@@ -57,13 +57,14 @@ button {
 </div>
 
 <canvas id="game"></canvas>
+  <button onclick="openFullscreen()">Tam Ekran</button>
 
 <script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-canvas.width = 900;
-canvas.height = 400;
+canvas.width = window.innerWidth;
+canvas.height = window.İnnerHeight;
 
 let gameStarted = false;
 let finished = false;
@@ -240,6 +241,11 @@ document.addEventListener("keydown", e=>{
   }
 });
 </script>
-
+function openFullscreen() {
+  let elem = document.documentElement;
+  if (elem.requestFullscreen) {
+    elem.requestFullscreen();
+  }
+}
 </body>
 </html>
