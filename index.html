@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Senin İçin ❤️</title>
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    font-family: Arial;
+    background: linear-gradient(#87CEEB, #fff);
+  }
+  canvas {
+    display: block;
+    margin: 0 auto;
+    background: #cceeff;
+  }
+  #message {
+    position: absolute;
+    top: 40%;
+    width: 100%;
+    text-align: center;
+    font-size: 30px;
+    color: #ff3366;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="game"></canvas>
+<div id="message">Sana kavuşmak için tüm engelleri aştım ❤️</div>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+canvas.width = 800;
+canvas.height = 400;
+
+let player = {
+  x: 50,
+  y: 300,
+  width: 40,
+  height: 40,
+  dy: 0,
+  jumping: false,
+  ducking: false
+};
+
+let gravity = 0.6;
+let obstacles = [];
+let gameOver = false;
+let distance = 0;
+
+// ENGEL OLUŞTUR
+function createObstacle() {
+  let height = Math.random() > 0.5 ? 40 : 70;
+  obstacles.push({
+    x: canvas.width,
+    y: 340 - height,
+    width: 20,
+    height: height
+  });
+}
+
+// OYUNCU GÜNCELLE
+function updatePlayer() {
+  player.y += player.dy;
+  player.dy += gravity;
+
+  if (player.y > 300) {
+    player.y = 300;
+    player.jumping = false;
+  }
+
+  if (player.ducking) {
+    player.height = 25;
+  } else {
+    player.height = 40;
+  }
+}
+
+// ENGELLER
+function updateObstacles() {
+  obstacles.forEach(o => o.x -= 5);
+
+  if (Math.random() < 0.02) createObstacle();
+
+  obstacles.forEach(o => {
+    if (
+      player.x < o.x + o.width &&
+      player.x + player.width > o.x &&
+      player.y < o.y + o.height &&
+      player.y + player.height > o.y
+    ) {
+      gameOver = true;
+    }
+  });
+
+  obstacles = obstacles.filter(o => o.x > -50);
+}
+
+// ÇİZ
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Zemin
+  ctx.fillStyle = "#654321";
+  ctx.fillRect(0, 340, canvas.width, 60);
+
+  // Oyuncu
+  ctx.fillStyle = "red";
+  ctx.fillRect(player.x, player.y, player.width, player.height);
+
+  // Engeller
+  ctx.fillStyle = "black";
+  obstacles.forEach(o => {
+    ctx.fillRect(o.x, o.y, o.width, o.height);
+  });
+
+  // KULE (finish)
+  ctx.fillStyle = "purple";
+  ctx.fillRect(750, 250, 30, 90);
+}
+
+// OYUN LOOP
+function gameLoop() {
+  if (gameOver) return;
+
+  updatePlayer();
+  updateObstacles();
+  draw();
+
+  distance += 5;
+
+  // KULEYE ULAŞMA
+  if (distance > 3000) {
+    document.getElementById("message").style.display = "block";
+    return;
+  }
+
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+
+// KONTROLLER
+document.addEventListener("keydown", e => {
+  if ((e.code === "Space" || e.key === "ArrowUp") && !player.jumping) {
+    player.dy = -12;
+    player.jumping = true;
+  }
+
+  if (e.key === "ArrowDown") {
+    player.ducking = true;
+  }
+});
+
+document.addEventListener("keyup", e => {
+  if (e.key === "ArrowDown") {
+    player.ducking = false;
+  }
+});
+</script>
+
+</body>
+</html>
