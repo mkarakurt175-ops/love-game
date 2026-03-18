@@ -5,41 +5,42 @@
 <title>Bizim Hikayemiz ❤️</title>
 
 <style>
-body {
-  margin: 0;
-  overflow: hidden;
-  font-family: Arial;
-}
+body { margin:0; overflow:hidden; font-family:Arial; }
 
 canvas {
-  display: block;
-  margin: 0 auto;
+  display:block;
+  margin:0 auto;
   background: linear-gradient(#f7d9a0, #e6b566);
 }
 
+/* Başlangıç */
 #startScreen, #finalScreen {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  background: rgba(0,0,0,0.7);
-  color: white;
+  position:absolute;
+  width:100%;
+  height:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  background:rgba(0,0,0,0.7);
+  color:white;
 }
 
 button {
-  padding: 15px 30px;
-  font-size: 20px;
-  cursor: pointer;
+  padding:15px 30px;
+  font-size:20px;
+  cursor:pointer;
 }
 
+/* Yazı animasyonu */
 #finalText {
-  font-size: 28px;
-  text-align: center;
-  opacity: 0;
-  transition: 2s;
+  font-size:26px;
+  text-align:center;
+  width:70%;
+  line-height:1.5;
+  border-right: 3px solid white;
+  white-space: nowrap;
+  overflow: hidden;
 }
 </style>
 </head>
@@ -52,17 +53,10 @@ button {
 </div>
 
 <div id="finalScreen" style="display:none;">
-  <div id="finalText">
-    Gerçek hayatta olduğu gibi oyunda da tüm engelleri aşarak beni buldun ve kavuştuk...  
-    Seni çok seviyorum Merve ❤️ Doğukan
-  </div>
+  <div id="finalText"></div>
 </div>
 
 <canvas id="game"></canvas>
-
-<audio id="music" loop>
-  <!-- İstersen buraya mp3 linki koyacağız -->
-</audio>
 
 <script>
 const canvas = document.getElementById("game");
@@ -72,29 +66,29 @@ canvas.width = 900;
 canvas.height = 400;
 
 let gameStarted = false;
-let gameOver = false;
+let finished = false;
 
-// FOTOĞRAFLAR (BURAYA KENDİLERİNİ YÜKLEYECEKSİN)
+// FOTOĞRAFLAR
 let playerImg = new Image();
-playerImg.src = "erkek.png";
+playerImg.src = "erkek.png.jpeg";
 
 let princessImg = new Image();
-princessImg.src = "kiz.png";
+princessImg.src = "kiz.png.jpeg";
 
 let towerImg = new Image();
-towerImg.src = "kule.png";
+towerImg.src = "kule.png.jpeg";
 
 let flowerImg = new Image();
-flowerImg.src = "cicek.png";
+flowerImg.src = "cicek.png.jpeg";
 
+// OYUNCU
 let player = {
   x: 50,
   y: 300,
   width: 50,
   height: 50,
   dy: 0,
-  jumping: false,
-  ducking: false
+  jumping: false
 };
 
 let gravity = 0.6;
@@ -102,69 +96,65 @@ let obstacles = [];
 let flowers = [];
 let distance = 0;
 
-function startGame() {
-  document.getElementById("startScreen").style.display = "none";
+// BAŞLAT
+function startGame(){
+  document.getElementById("startScreen").style.display="none";
   gameStarted = true;
   gameLoop();
 }
 
-// ENGELLER
-function createObstacle() {
+// ENGEL
+function createObstacle(){
   let type = Math.random();
 
-  if (type < 0.5) {
-    obstacles.push({ x: canvas.width, y: 310, w: 20, h: 40 });
+  if(type < 0.5){
+    obstacles.push({x:900, y:310, w:20, h:40});
   } else {
-    obstacles.push({ x: canvas.width, y: 270, w: 20, h: 80 });
+    obstacles.push({x:900, y:260, w:20, h:90});
   }
 }
 
 // ÇİÇEK
-function createFlower() {
-  flowers.push({
-    x: canvas.width,
-    y: 300,
-    w: 25,
-    h: 25
-  });
+function createFlower(){
+  flowers.push({x:900, y:300, w:25, h:25});
 }
 
-// GÜNCELLE
-function update() {
+// UPDATE
+function update(){
   player.y += player.dy;
   player.dy += gravity;
 
-  if (player.y > 300) {
+  if(player.y > 300){
     player.y = 300;
     player.jumping = false;
   }
 
-  obstacles.forEach(o => o.x -= 6);
-  flowers.forEach(f => f.x -= 6);
+  obstacles.forEach(o => o.x -= 7);
+  flowers.forEach(f => f.x -= 7);
 
-  if (Math.random() < 0.03) createObstacle();
-  if (Math.random() < 0.02) createFlower();
+  if(Math.random() < 0.04) createObstacle();
+  if(Math.random() < 0.03) createFlower();
 
-  // ÇARPIŞMA
-  obstacles.forEach(o => {
-    if (
+  // Çarpışma
+  obstacles.forEach(o=>{
+    if(
       player.x < o.x + o.w &&
       player.x + player.width > o.x &&
       player.y < o.y + o.h &&
       player.y + player.height > o.y
-    ) {
+    ){
       resetGame();
     }
   });
 
-  // ÇİÇEK TOPLAMA
-  flowers = flowers.filter(f => {
-    if (
+  // Çiçek toplama
+  flowers = flowers.filter(f=>{
+    if(
       player.x < f.x + f.w &&
       player.x + player.width > f.x &&
       player.y < f.y + f.h &&
       player.y + player.height > f.y
-    ) {
+    ){
       return false;
     }
     return true;
@@ -172,36 +162,41 @@ function update() {
 
   distance += 5;
 
-  if (distance > 4000) finishGame();
+  if(distance > 4500){
+    finished = true;
+    gameStarted = false;
+    showFinalScene();
+  }
 }
 
 // ÇİZ
-function draw() {
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+function draw(){
+  ctx.clearRect(0,0,900,400);
 
   // zemin
-  ctx.fillStyle = "#a36b2c";
-  ctx.fillRect(0, 350, canvas.width, 50);
+  ctx.fillStyle="#a36b2c";
+  ctx.fillRect(0,350,900,50);
 
   // oyuncu
-  ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+  ctx.drawImage(playerImg, player.x, player.y, 50, 50);
 
   // engeller
-  ctx.fillStyle = "black";
-  obstacles.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
+  ctx.fillStyle="black";
+  obstacles.forEach(o=>ctx.fillRect(o.x,o.y,o.w,o.h));
 
-  // çiçekler
-  flowers.forEach(f => ctx.drawImage(flowerImg, f.x, f.y, f.w, f.h));
+  // çiçek
+  flowers.forEach(f=>ctx.drawImage(flowerImg,f.x,f.y,25,25));
 
   // kule
-  ctx.drawImage(towerImg, 800, 200, 80, 150);
+  ctx.drawImage(towerImg, 780, 200, 100, 160);
 
   // prenses
   ctx.drawImage(princessImg, 810, 180, 50, 50);
 }
 
-function gameLoop() {
-  if (!gameStarted) return;
+// LOOP
+function gameLoop(){
+  if(!gameStarted) return;
 
   update();
   draw();
@@ -209,26 +204,37 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
-function resetGame() {
+// RESET
+function resetGame(){
   obstacles = [];
   flowers = [];
   distance = 0;
   player.y = 300;
 }
 
-// FİNAL
-function finishGame() {
-  gameStarted = false;
-  document.getElementById("finalScreen").style.display = "flex";
+// 💘 FİNAL SAHNESİ
+function showFinalScene(){
+  document.getElementById("finalScreen").style.display="flex";
 
-  setTimeout(() => {
-    document.getElementById("finalText").style.opacity = 1;
-  }, 500);
+  let text = "Gerçek hayatta olduğu gibi oyunda da tüm engelleri aşarak beni buldun ve kavuştuk... Seni çok seviyorum Merve ❤️ Doğukan";
+
+  let i = 0;
+  let speed = 40;
+
+  function typeWriter(){
+    if(i < text.length){
+      document.getElementById("finalText").innerHTML += text.charAt(i);
+      i++;
+      setTimeout(typeWriter, speed);
+    }
+  }
+
+  typeWriter();
 }
 
 // KONTROLLER
-document.addEventListener("keydown", e => {
-  if ((e.code === "Space" || e.code === "ArrowUp") && !player.jumping) {
+document.addEventListener("keydown", e=>{
+  if((e.code==="Space" || e.code==="ArrowUp") && !player.jumping){
     player.dy = -12;
     player.jumping = true;
   }
